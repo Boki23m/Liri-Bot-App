@@ -15,8 +15,12 @@ var fs = require("fs");
 // Initialize the spotify API client using our client id and secret
 var spotify = new Spotify(keys.spotify);
 
+// Store all of the arguments in an array
+var nodeArgs = process.argv;
+// Store the action/command
 var action = process.argv[2];
-var input = process.argv[3];
+// Joining the remaining arguments
+var input = process.argv.slice(3).join(" ");
 
 // Commands for liri 
 //concert-this, spotify-this-song, movie-this, do-what-it-says
@@ -30,7 +34,7 @@ switch (action) {
         break;
 
     case "movie-this":
-        getMovie(input);
+        getMovie();
         break;
 
     case "do-what-it-says":
@@ -50,14 +54,9 @@ function getConcert(input) {
         console.log("You have not entered an Artist or Band but...");
     };
 
-    axios.get('https://rest.bandsintown.com/artists/' + input + '/events?app_id=codingbootcamp').then(
-        function (response) {
-            if (response === undefined) {
-                console.log("Artist/Band not found! Please try again.");
-            }
-            else {
+    axios.get('https://rest.bandsintown.com/artists/' + input + '/events?app_id=codingbootcamp')
+        .then(function (response) {
             var bands = response.data;
-            //console.log(bands);
             var venueName = bands[0].venue.name;
             var venueCity = bands[0].venue.city;
             var venueRegion = bands[0].venue.region;
@@ -71,7 +70,41 @@ function getConcert(input) {
             // Moment turns timeUTC to MM/DD/YYYY
             var time = moment(timeUTC).format('MM/DD/YYYY');
             console.log('This show is on ' + time);
-            }
+        })
+        .catch(function (error) {
+            console.log(error.response.data);
+            console.log('Please try again!');
+        });
+}
+function getSong(input) {
+
+}
+
+function getMovie() {
+    if (!input) {
+        var movieName = "Mr+Nobody";
+        console.log("You have not entered a movie to search for but...");
+    }
+    else {
+        movieName =process.argv.slice(3).join("+");
+    }
+    // Then run a request with axios to the OMDB API with the movie specified
+    var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
+
+    axios.get(queryUrl).then(
+        function (response) {
+            console.log("Movie title: " + response.data.Title);
+            console.log("Release Year: " + response.data.Year);
+            console.log("The movie's rating is: " + response.data.imdbRating);
+            console.log("Rotten Tomatoes Rating: " + response.data.Ratings[1].Value);
+            console.log("Country where the movie was produced: " + response.data.Country);
+            console.log("Language of the movie: " + response.data.Language);
+            console.log("Plot: " + response.data.Plot);
+            console.log("Actors: " + response.data.Actors);
         }
-    )
+    );
+    if (!input) {
+        console.log("If you haven't watched 'Mr. Nobody', then you should: http://www.imdb.com/title/tt0485947/");
+        console.log("It's on Netflix!");
+    }
 }
