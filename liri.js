@@ -6,7 +6,7 @@ require("dotenv").config();
 var Spotify = require("node-spotify-api");
 // Import the API keys
 var keys = require("./keys");
-// Import the request, mpment and axios npm package.
+// Import the request, moment and axios npm package.
 var request = require("request");
 var axios = require('axios');
 var moment = require("moment");
@@ -34,7 +34,7 @@ switch (action) {
         break;
 
     case "movie-this":
-        getMovie();
+        getMovie(input);
         break;
 
     case "do-what-it-says":
@@ -53,7 +53,7 @@ function getConcert(input) {
         input = "Metallica"
         console.log("You have not entered an Artist or Band but...");
     };
-
+    
     axios.get('https://rest.bandsintown.com/artists/' + input + '/events?app_id=codingbootcamp')
         .then(function (response) {
             var bands = response.data;
@@ -76,17 +76,23 @@ function getConcert(input) {
             console.log('Please try again!');
         });
 }
+
 function getSong(input) {
 
 }
 
-function getMovie() {
+function getMovie(input) {
     if (!input) {
         var movieName = "Mr+Nobody";
         console.log("You have not entered a movie to search for but...");
+        console.log("If you haven't watched 'Mr. Nobody', then you should: http://www.imdb.com/title/tt0485947/");
+        console.log("It's on Netflix!");
     }
     else {
-        movieName =process.argv.slice(3).join("+");
+        // Prepare the input for axios get function
+        // If movie has more than 1 word replace " " with "+"
+        movieName = input.split(" ");
+        movieName = movieName.join("+");
     }
     // Then run a request with axios to the OMDB API with the movie specified
     var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
@@ -101,10 +107,31 @@ function getMovie() {
             console.log("Language of the movie: " + response.data.Language);
             console.log("Plot: " + response.data.Plot);
             console.log("Actors: " + response.data.Actors);
+        })
+        .catch(function (error) {
+            console.log(error);
+            console.log('Please try again!');
+        });
+}
+
+function getRandom() {
+    fs.readFile("random.txt", "utf8", function (error, data) {
+        if (error) {
+            return console.log(error);
         }
-    );
-    if (!input) {
-        console.log("If you haven't watched 'Mr. Nobody', then you should: http://www.imdb.com/title/tt0485947/");
-        console.log("It's on Netflix!");
-    }
+        var dataArr = data.split(",");
+
+        if (dataArr[0] === "spotify-this-song") {
+            getSong(dataArr[1]);
+        }
+        else if (dataArr[0] === "movie-this") {
+            getMovie(dataArr[1]);
+        }
+        else if (dataArr[0] === "concert-this") {
+            getConcert(dataArr[1]);
+        }
+        else {
+            console.log("Nothing to do!");
+        }
+    });
 }
