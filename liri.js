@@ -6,8 +6,7 @@ require("dotenv").config();
 var Spotify = require("node-spotify-api");
 // Import the API keys
 var keys = require("./keys");
-// Import the request, moment and axios npm package.
-var request = require("request");
+// Import moment and axios npm package.
 var axios = require('axios');
 var moment = require("moment");
 // Import the FS package for read/write.
@@ -15,8 +14,6 @@ var fs = require("fs");
 // Initialize the spotify API client using our client id and secret
 var spotify = new Spotify(keys.spotify);
 
-// Store all of the arguments in an array
-var nodeArgs = process.argv;
 // Store the action/command
 var action = process.argv[2];
 // Joining the remaining arguments
@@ -53,7 +50,9 @@ function getConcert(input) {
         input = "Metallica"
         console.log("You have not entered an Artist or Band but...");
     };
-    
+    // Remove quotes from the ends of input string.
+    input = input.replace(/^"(.*)"$/, '$1');
+
     axios.get('https://rest.bandsintown.com/artists/' + input + '/events?app_id=codingbootcamp')
         .then(function (response) {
             var bands = response.data;
@@ -78,7 +77,22 @@ function getConcert(input) {
 }
 
 function getSong(input) {
+    if (!input) {
+        input = "The Sign Ace of Base";
+    }
 
+    spotify
+        .search({ type: 'track', query: input, limit: 3}, function (err, data) {
+            if (err) {
+                return console.log('Error occurred: ' + err);
+            }
+            for (var i = 0; i < data.tracks.items[0].album.artists.length; i++) {
+                console.log("Artist(s): " + data.tracks.items[0].album.artists[i].name);
+                console.log("Song: " + data.tracks.items[0].name);
+                console.log("Album: " + data.tracks.items[0].album.name);
+                console.log("Song Link: " + data.tracks.items[0].external_urls.spotify);
+            }
+        });
 }
 
 function getMovie(input) {
